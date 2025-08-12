@@ -22,6 +22,20 @@ def create_multi_images(
     image_paths = [image_path] * nb_images
     return create_pdf_with_images(image_paths, output_path, title)
 
+def calculate_cols_rows(nb_images: int) -> tuple[int, int]:
+    """Calculate the number of columns and rows based on the number of images."""
+    if nb_images <= 2:
+        return 1, 2  # 1 column, 2 rows
+    elif nb_images <= 4:
+        return 2, 2  # 2 columns, 2 rows
+    elif nb_images <= 6:
+        return 2, 3  # 2 columns, 3 rows
+    elif nb_images <= 9:
+        return 3, 3  # 3 columns, 3 rows
+    elif nb_images <= 12:
+        return 3, 4  # 3 columns, 4 rows
+    else:
+        raise ValueError("Maximum 12 images allowed")
 
 def create_pdf_with_images(
     image_paths: list[str],
@@ -66,7 +80,7 @@ def create_pdf_with_images(
     available_height = page_height - (2 * margin)
 
     # Grid: 3 columns, 4 rows
-    cols, rows = 3, 4
+    cols, rows = calculate_cols_rows(len(image_paths))
     img_width = available_width / cols - spacing
     img_height = available_height / rows - spacing
 
