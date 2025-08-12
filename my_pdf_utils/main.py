@@ -6,6 +6,7 @@ from PIL import Image
 
 app = typer.Typer()
 
+
 @app.command()
 def create_multi_images(
     image_path: str = typer.Argument(..., help="Path to a PNG image"),
@@ -21,9 +22,10 @@ def create_multi_images(
     image_paths = [image_path] * nb_images
     return create_pdf_with_images(image_paths, output_path, title)
 
+
 def create_pdf_with_images(
-    image_paths: list[str], 
-    output_path: str = "output.pdf", 
+    image_paths: list[str],
+    output_path: str = "output.pdf",
     title: str = "Images Grid"
 ) -> str:
     """Creates a PDF A4 with 6 images arranged in 2 columns and 3 rows.
@@ -41,7 +43,6 @@ def create_pdf_with_images(
     """
     if len(image_paths) > 12:
         raise ValueError("Maximum 12 images allowed")
-    nb_images = len(image_paths)
 
     # Verify all image files exist
     for img_path in image_paths:
@@ -120,4 +121,3 @@ def create_pdf_with_images(
 
     c.save()
     return output_path
-
