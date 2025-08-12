@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "my-pdf-utils"
+version = "0.1.0"
+description = ""
+authors = ["Mathieu Duc <mathieu.duc@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pytest = "^8.4.1"
+typer = "^0.16.0"
+reportlab = "^4.4.3"
+
+[tool.poetry.scripts]
+my-pdf-utils = "my_pdf_utils.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
