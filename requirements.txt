@@ -1,0 +1,22 @@
+charset-normalizer==3.4.3
+click==8.2.1
+iniconfig==2.1.0
+markdown-it-py==4.0.0
+mdurl==0.1.2
+-e git+https://github.com/ducmat/my-pdf-utils.git@c3eed9092542d5aa046f73642a5fc63fb64d90af#egg=my_pdf_utils
+packaging==25.0
+# Editable install with no version control (pdf-multiple-img==0.1.0)
+-e /home/mathieu-duc/github/rick-portal-gun
+pillow==10.4.0
+pluggy==1.6.0
+Pygments==2.19.2
+pytest==8.4.1
+reportlab==4.4.3
+rich==14.1.0
+# Editable install with no version control (rick-portal-gun==0.1.0)
+-e /home/mathieu-duc/github/rick-portal-gun
+shellingham==1.5.4
+# Editable install with no version control (testing==0.1.0)
+-e /home/mathieu-duc/github/testing
+typer==0.16.0
+typing_extensions==4.14.1
