@@ -1,0 +1,107 @@
+name: Generate PDF with Manual File Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      nb_images:
+        description: 'Nombre d''images à inclure dans le PDF (1-12)'
+        required: true
+        default: '6'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+      pdf_title:
+        description: 'Titre du document PDF'
+        required: false
+        default: 'Images Grid'
+        type: string
+      output_filename:
+        description: 'Nom du fichier PDF de sortie'
+        required: false
+        default: 'generated_pdf'
+        type: string
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install
+        
+    - name: Create sample image (placeholder)
+      run: |
+        poetry run python -c "
+        from PIL import Image;
+        import random;
+        colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'cyan'];
+        color = random.choice(colors);
+        img = Image.new('RGB', (400, 400), color=color);
+        img.save('sample_image.png');
+        print(f'Created sample {color} image')
+        "
+        
+    - name: Generate PDF
+      run: |
+        poetry run my-pdf-utils create-multi-images \
+          sample_image.png \
+          ${{ github.event.inputs.nb_images }} \
+          --output-path "${{ github.event.inputs.output_filename }}.pdf" \
+          --title "${{ github.event.inputs.pdf_title }}"
+        
+    - name: Verify PDF creation
+      run: |
+        if [ -f "${{ github.event.inputs.output_filename }}.pdf" ]; then
+          echo "✅ PDF successfully created!"
+          ls -la "${{ github.event.inputs.output_filename }}.pdf"
+          echo "PDF size: $(du -h '${{ github.event.inputs.output_filename }}.pdf' | cut -f1)"
+        else
+          echo "❌ Error: PDF not found"
+          exit 1
+        fi
+        
+    - name: Upload PDF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.inputs.output_filename }}-${{ github.event.inputs.nb_images }}images-${{ github.run_number }}
+        path: ${{ github.event.inputs.output_filename }}.pdf
+        retention-days: 30
+        
+    - name: Upload sample image as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sample-image-${{ github.run_number }}
+        path: sample_image.png
+        retention-days: 7
+        
+    - name: Summary
+      run: |
+        echo "## 📊 Résumé de l'exécution" >> $GITHUB_STEP_SUMMARY
+        echo "- **Nombre d'images:** ${{ github.event.inputs.nb_images }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Titre du PDF:** ${{ github.event.inputs.pdf_title }}" >> $GITHUB_STEP_SUMMARY  
+        echo "- **Nom du fichier:** ${{ github.event.inputs.output_filename }}.pdf" >> $GITHUB_STEP_SUMMARY
+        echo "- **Taille du fichier:** $(du -h '${{ github.event.inputs.output_filename }}.pdf' | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Le PDF a été généré avec succès et est disponible en tant qu'artefact." >> $GITHUB_STEP_SUMMARY

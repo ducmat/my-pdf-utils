@@ -1,0 +1,95 @@
+name: Generate PDF with Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      nb_images:
+        description: 'Nombre d''images à inclure dans le PDF (1-12)'
+        required: true
+        default: '6'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+      image_file:
+        description: 'URL de l''image à utiliser (PNG/JPG)'
+        required: true
+        default: 'https://via.placeholder.com/400x400.png'
+        type: string
+      output_filename:
+        description: 'Nom du fichier PDF de sortie'
+        required: false
+        default: 'generated_pdf'
+        type: string
+      pdf_title:
+        description: 'Titre du document PDF'
+        required: false
+        default: 'Images Grid'
+        type: string
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install
+        
+    - name: Download input image
+      run: |
+        echo "Downloading image from: ${{ github.event.inputs.image_file }}"
+        curl -L "${{ github.event.inputs.image_file }}" -o input_image.png
+        ls -la input_image.png
+        
+    - name: Generate PDF
+      run: |
+        poetry run my-pdf-utils create-multi-images \
+          input_image.png \
+          ${{ github.event.inputs.nb_images }} \
+          --output-path "${{ github.event.inputs.output_filename }}.pdf" \
+          --title "${{ github.event.inputs.pdf_title }}"
+        
+    - name: Verify PDF creation
+      run: |
+        if [ -f "${{ github.event.inputs.output_filename }}.pdf" ]; then
+          echo "PDF successfully created!"
+          ls -la "${{ github.event.inputs.output_filename }}.pdf"
+        else
+          echo "Error: PDF not found"
+          exit 1
+        fi
+        
+    - name: Upload PDF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: generated-pdf-${{ github.run_number }}
+        path: ${{ github.event.inputs.output_filename }}.pdf
+        retention-days: 30
+        
+    - name: Upload input image as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: input-image-${{ github.run_number }}
+        path: input_image.png
+        retention-days: 7
