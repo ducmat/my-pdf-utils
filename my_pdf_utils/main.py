@@ -1,7 +1,5 @@
 import os
 import typer
-from typer import Typer
-from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from PIL import Image
