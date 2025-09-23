@@ -1,0 +1,70 @@
+name: Generate PDF with Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdf_file:
+        description: 'URL du PDF'
+        required: true
+        default: 'https://via.placeholder.com/400x400.png'
+        type: string
+      output_filename:
+        description: 'Nom du fichier PNG de sortie'
+        required: false
+        default: 'generated_png'
+        type: string
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install
+        
+    - name: Download input image
+      run: |
+        echo "Downloading PDF from: ${{ github.event.inputs.pdf_file }}"
+        curl -L "${{ github.event.inputs.pdf_file }}" -o input_pdf.pdf
+        ls -la input_pdf.pdf
+        
+    - name: Generate PDF
+      run: |
+        poetry run my-pdf-utils pdf-to-jpg\
+          input_pdf.pdf \
+          --output-path "${{ github.event.inputs.output_filename }}.png"
+        
+    - name: Verify PDF creation
+      run: |
+        if [ -f "${{ github.event.inputs.output_filename }}.png" ]; then
+          echo "PNG successfully created!"
+          ls -la "${{ github.event.inputs.output_filename }}.png"
+        else
+          echo "Error: PNG not found"
+          exit 1
+        fi
+        
+    - name: Upload PNG as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: generated-png-${{ github.run_number }}
+        path: ${{ github.event.inputs.output_filename }}.png
+        retention-days: 30
+        
+    - name: Upload input image as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: input-image-${{ github.run_number }}
+        path: input_pdf.pdf
+        retention-days: 7

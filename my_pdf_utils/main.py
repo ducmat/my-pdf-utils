@@ -3,7 +3,7 @@ import typer
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from PIL import Image
-
+import pymupdf
 app = typer.Typer()
 
 
@@ -135,3 +135,67 @@ def create_pdf_with_images(
 
     c.save()
     return output_path
+
+
+def convert_pdf_to_jpg(    pdf_path: str,
+    output_path: str = "output.png",
+) -> list[str]:
+    """Converts a PDF file to JPG images, one per page.
+
+    Args:
+        pdf_path (str): Path to the PDF file to convert.
+        output_dir (str): Directory where JPG files will be saved.
+        output_prefix (str): Prefix for output JPG filenames.
+        dpi (int): DPI for the output images (higher = better quality, larger files).
+
+    Returns:
+        list[str]: List of paths to the created JPG files.
+
+    Raises:
+        ValueError: If PDF file doesn't exist or output directory is invalid.
+    """
+    # Check if PDF file exists
+    if not os.path.exists(pdf_path):
+        raise ValueError(f"PDF file not found: {pdf_path}")
+    
+    try:
+        # Import pdf2image here to give a clear error message if not installed
+        doc=pymupdf.open(pdf_path)
+        page=doc[0]
+        pix = page.get_pixmap()
+        pix.save("page-1.png","png",jpg_quality=100)
+        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+        # Save each page as PNG
+        output_files = []
+        img.save(output_path, "PNG")
+        output_files.append(output_path)
+
+        return output_files
+    
+    except Exception as e:
+        raise ValueError(f"Error converting PDF to JPG: {e}") from e
+
+
+@app.command()
+def pdf_to_jpg(
+    pdf_path: str = typer.Argument(..., help="Path to the PDF file to convert"),
+    output_path: str = typer.Option("output.png", help="Path where the output PNG file will be saved")
+) -> None:
+    """Converts a PDF file to JPG images, one per page.
+    """
+    typer.echo(f"Converting PDF '{pdf_path}' to JPG images...")
+    
+    try:
+        output_files = convert_pdf_to_jpg(pdf_path, output_path)
+        
+        typer.echo(f"✅ Successfully converted {len(output_files)} pages:")
+        for output_file in output_files:
+            typer.echo(f"   - {output_file}")
+        
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error: {e}", err=True)
+        raise typer.Exit(1)
+

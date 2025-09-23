@@ -11,6 +11,10 @@ pytest = "^8.4.1"
 typer = "^0.16.0"
 reportlab = "^4.4.3"
 pillow = "^10.0.0"
+pypdf2 = "^3.0.1"
+pypdf = "^6.1.0"
+pdf2image = "^1.17.0"
+pymupdf = "^1.26.4"
 
 [tool.poetry.scripts]
 my-pdf-utils = "my_pdf_utils.main:app"
