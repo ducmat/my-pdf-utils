@@ -65,6 +65,7 @@ jobs:
     - name: Generate PDF
       run: |
         poetry run my-pdf-utils \
+          create-multi-images \
           input_image.png \
           ${{ github.event.inputs.nb_images }} \
           --output-path "${{ github.event.inputs.output_filename }}.pdf" \
