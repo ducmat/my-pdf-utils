@@ -1,4 +1,4 @@
-name: Generate PDF with Images
+name: Convert PDF to PNG
 
 on:
   workflow_dispatch:
