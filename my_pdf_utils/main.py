@@ -1,6 +1,6 @@
 import os
 import typer
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 from PIL import Image
 import pymupdf
@@ -22,25 +22,26 @@ def create_multi_images(
     image_paths = [image_path] * nb_images
     return create_pdf_with_images(image_paths, output_path, title)
 
-def calculate_cols_rows(nb_images: int) -> tuple[int, int]:
+def calculate_cols_rows(nb_images: int) -> tuple[int, int, str]:
     """Calculate the number of columns and rows based on the number of images."""
     if nb_images <= 2:
-        return 1, 2  # 1 column, 2 rows
+        return 2, 1, "landscape"  # 1 column, 2 rows
     elif nb_images <= 4:
-        return 2, 2  # 2 columns, 2 rows
+        return 2, 2, "portrait"  # 2 columns, 2 rows
     elif nb_images <= 6:
-        return 2, 3  # 2 columns, 3 rows
+        return 3, 2, "landscape"  # 3 columns, 2 rows
     elif nb_images <= 9:
-        return 3, 3  # 3 columns, 3 rows
+        return 3, 3, "portrait"  # 3 columns, 3 rows
     elif nb_images <= 12:
-        return 3, 4  # 3 columns, 4 rows
+        return 4, 3, "landscape"  # 4 columns, 3 rows
     else:
         raise ValueError("Maximum 12 images allowed")
 
 def create_pdf_with_images(
     image_paths: list[str],
     output_path: str = "output.pdf",
-    title: str = "Images Grid"
+    title: str = "Images Grid",
+    orientation: str = "portrait",
 ) -> str:
     """Creates a PDF A4 with 6 images arranged in 2 columns and 3 rows.
 
@@ -68,8 +69,14 @@ def create_pdf_with_images(
     if output_dir and not os.path.exists(output_dir):
         raise ValueError(f"Invalid output directory: {output_dir}")
 
+    # Grid: 3 columns, 4 rows
+    cols, rows, orientation = calculate_cols_rows(len(image_paths))
+
     # A4 dimensions in points (1 point = 1/72 inch)
-    page_width, page_height = A4
+    if orientation == "landscape":
+        page_width, page_height = landscape(A4)
+    else:
+        page_width, page_height = A4
 
     # Margins
     margin = 20
@@ -79,13 +86,11 @@ def create_pdf_with_images(
     available_width = page_width - (2 * margin)
     available_height = page_height - (2 * margin)
 
-    # Grid: 3 columns, 4 rows
-    cols, rows = calculate_cols_rows(len(image_paths))
     img_width = available_width / cols - spacing
     img_height = available_height / rows - spacing
 
     # Create PDF
-    c = canvas.Canvas(output_path, pagesize=A4)
+    c = canvas.Canvas(output_path, pagesize=[page_width, page_height])
     c.setTitle(title)
 
     # Add images to grid
